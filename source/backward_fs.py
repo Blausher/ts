@@ -63,7 +63,7 @@ def backward_by_fi(X_train, y_train, X_valid, y_valid, features, percent_drop=10
         plt.grid()
         plt.legend();
 
-    return short_lists, train_scores, valid_scores, model
+    return short_lists, train_scores, valid_scores
 
 def select_feature_index(metrics):
     min_val = min(metrics)
