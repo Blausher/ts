@@ -116,9 +116,12 @@ def pipe(x_train: pd.DataFrame, x_valid: pd.DataFrame, x_test: pd.DataFrame,
 
     best_algo = df_m[df_m['test_metric'].eq(df_m['test_metric'].min())]['k'].values[0]
 
-    print('best_algo:', best_algo)
+    print('df_m:')
+    print(df_m)
+
     # OPTIMIZATION part -------------------------------
     if best_algo == 'df_metric_lgbm_corr':
+        print('best_algo = LGBM Corr')
         # победил отбор с помощью корреляции
         objective_with_args = partial(objective_lgbm_model,
                                     X_train=x_train,
@@ -140,9 +143,12 @@ def pipe(x_train: pd.DataFrame, x_valid: pd.DataFrame, x_test: pd.DataFrame,
                               random_state=34, n_jobs=-1)
         model.fit(X=x_train[top10_features], y=y_train, eval_set=(x_valid[top10_features], y_valid))
 
-        return {'model': model, 'features': top10_features}
+        return {'model': model, 'features': top10_features,
+                'best_model': 'LGBM_corr'
+                }
 
     if best_algo == 'df_metric_lgbm':
+        print('best_algo = LGBM')
         # победил отбор с помощью backward FS
         objective_with_args = partial(objective_lgbm_model,
                                     X_train=x_train,
@@ -164,21 +170,25 @@ def pipe(x_train: pd.DataFrame, x_valid: pd.DataFrame, x_test: pd.DataFrame,
                               random_state=34, n_jobs=-1)
         model.fit(X=x_train[shortlist], y=y_train, eval_set=(x_valid[shortlist], y_valid))
 
-        return {'model': model, 'features': shortlist}
+        return {'model': model, 'features': shortlist,
+                'best_model': 'LGBM'
+                }
         
     if best_algo == 'df_metric_lasso': # TODO посмотреть еще этот отбор альфы мб оптимизировать
+        print('best_algo = Lasso')
         # победил отбор Lasso
-        param_grid = {'alpha': np.logspace(-4, 1, 10)}
-        lasso = Lasso(max_iter=1000)
-        grid_search = GridSearchCV(lasso, param_grid, cv=5, scoring='neg_mean_absolute_error')
-        grid_search.fit(X_train_scaled, y_train)
-        best_alpha = grid_search.best_params_['alpha']
+        # param_grid = {'alpha': np.logspace(-4, 1, 10)}
+        # lasso = Lasso(max_iter=1000)
+        # grid_search = GridSearchCV(lasso, param_grid, cv=5, scoring='neg_mean_absolute_error')
+        # grid_search.fit(X_train_scaled, y_train)
+        # best_alpha = grid_search.best_params_['alpha']
 
-        lasso = Lasso(alpha=best_alpha)  
-        lasso.fit(X_train_scaled, y_train)
+        # lasso = Lasso(alpha=best_alpha)  
+        # lasso.fit(X_train_scaled, y_train)
 
         return {'model': lasso, 'features': longlist,
                 'X_train_scaled': X_train_scaled, 
                 'X_valid_scaled': X_valid_scaled,
-                'X_test_scaled': X_test_scaled
+                'X_test_scaled': X_test_scaled,
+                'best_model': 'Lasso'
                 }
