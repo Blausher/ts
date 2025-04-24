@@ -9,6 +9,7 @@ from catboost import CatBoostRegressor
 from lightgbm import LGBMRegressor
 from xgboost import XGBRegressor
 import optuna
+optuna.logging.set_verbosity(optuna.logging.WARNING)
 
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import Ridge, Lasso
