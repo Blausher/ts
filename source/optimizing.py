@@ -5,7 +5,7 @@ from functools import partial
 import warnings
 warnings.filterwarnings('ignore')
 
-from probatus.feature_elimination import ShapRFECV
+# from probatus.feature_elimination import ShapRFECV
 from sklearn.model_selection import train_test_split
 from catboost import CatBoostRegressor
 from lightgbm import LGBMRegressor

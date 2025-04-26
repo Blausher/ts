@@ -10,101 +10,101 @@ import matplotlib.pyplot as plt
 def generate_features(df):
     df = df.copy()
     
-    # Price transformations
-    # df['%-log_price'] = np.log(df['Income'])
-    df['%-sqrt_price'] = np.sqrt(df['Income'])
-    
-    # Momentum Indicators (12 features)
-    for period in [7, 14]:
-        df[f'%-rsi-{period}'] = ta.RSI(df['Income'], timeperiod=period)
-        df[f'%-stoch-k-{period}'] = ta.STOCH(df['Income'], df['Income'], df['Income'], 
-                                           fastk_period=period)[0]
-        df[f'%-stoch-d-{period}'] = ta.STOCH(df['Income'], df['Income'], df['Income'],
-                                           fastk_period=period)[1]
-    
-    df['%-mom-10'] = ta.MOM(df['Income'], timeperiod=10)
-    df['%-mom-20'] = ta.MOM(df['Income'], timeperiod=20)
-    df['%-cmo-14'] = ta.CMO(df['Income'], timeperiod=14)
-    df['%-roc-10'] = ta.ROC(df['Income'], timeperiod=10)
-    df['%-roc-20'] = ta.ROC(df['Income'], timeperiod=20)
-    df['%-trix-14'] = ta.TRIX(df['Income'], timeperiod=14)
-    
-    # MACD components
-    macd, macdsignal, macdhist = ta.MACD(df['Income'])
-    df['%-macd'] = macd
-    df['%-macd_signal'] = macdsignal
-    df['%-macd_hist'] = macdhist
-    
-    # Trend Indicators (12 features)
-    for period in [7, 14, 30]:
-        df[f'%-sma-{period}'] = ta.SMA(df['Income'], timeperiod=period)
-        df[f'%-ema-{period}'] = ta.EMA(df['Income'], timeperiod=period)
-    
-    df['%-dema-20'] = ta.DEMA(df['Income'], timeperiod=20)
-    df['%-tema-20'] = ta.TEMA(df['Income'], timeperiod=20)
-    df['%-kama-20'] = ta.KAMA(df['Income'], timeperiod=20)
-    df['%-wma-20'] = ta.WMA(df['Income'], timeperiod=20)
-    df['%-adx-14'] = ta.ADX(df['Income'], df['Income'], df['Income'], timeperiod=14)
-    df['%-cci-14'] = ta.CCI(df['Income'], df['Income'], df['Income'], timeperiod=14)
-    df['%-vwma-20'] = (df['Income'] * df['Outcome']).rolling(20).sum() / df['Outcome'].rolling(20).sum()
-    
-    # Volatility Indicators (10 features)
-    periods = [7, 14, 30]
-    for period in periods:
-        df[f'%-atr-{period}'] = ta.ATR(df['Income'], df['Income'], df['Income'], timeperiod=period)
-        # df[f'%-volatility-{period}'] = df['Income'].pct_change().rolling(period).std()
-    
-    upper, _, lower = ta.BBANDS(df['Income'], timeperiod=20)
-    df['%-bb_upper-20'] = upper
-    df['%-bb_middle-20'] = (upper + lower) / 2
-    df['%-bb_lower-20'] = lower
-    df['%-bb_width'] = (upper - lower) / df['%-sma-14']
-    df['%-bb_pctb'] = (df['Income'] - lower) / (upper - lower)
-    
-    # Cycle Indicators (5 features)
-    df['%-ht_trendline'] = ta.HT_TRENDLINE(df['Income'])
-    sine, leadsine = ta.HT_SINE(df['Income'])
-    df['%-ht_sine'] = sine
-    df['%-ht_leadsine'] = leadsine
-    df['%-phase_shift'] = sine - leadsine
-    
-    # Volume Indicators (5 features)
-    df['%-obv'] = ta.OBV(df['Income'], df['Outcome'])  # Fixed to use Outcome as volume
-    # df['%-vpt'] = (df['Outcome'] * (df['Income'].pct_change())).cumsum()
-    # df['%-volume_change'] = df['Outcome'].pct_change()
-    df['%-volume_zscore'] = (df['Outcome'] - df['Outcome'].rolling(20).mean()) / df['Outcome'].rolling(20).std()
-    
-    # Statistical Features (12 features)
-    # df['%-returns-1'] = df['Income'].pct_change()
-    # df['%-log_returns'] = np.log(df['Income']).diff()
-    for period in [14, 30]:
-        df[f'%-rolling_skew-{period}'] = df['Income'].rolling(period).skew()
-        df[f'%-rolling_kurt-{period}'] = df['Income'].rolling(period).kurt()
-        df[f'%-rolling_q25-{period}'] = df['Income'].rolling(period).quantile(0.25)
-        df[f'%-rolling_q75-{period}'] = df['Income'].rolling(period).quantile(0.75)
-    
-    # df['%-cum_returns'] = (1 + df['Income'].pct_change()).cumprod()
-    df['%-expanding_mean'] = df['Income'].expanding().mean()
-    df['%-expanding_std'] = df['Income'].expanding().std()
-    
-    # Time-based Features
-    df['%-day_of_week'] = df['Date'].dt.dayofweek
-    df['%-month'] = df['Date'].dt.month
-    df['%-quarter'] = df['Date'].dt.quarter
-    df['%-year'] = df['Date'].dt.year
-    
-    # Advanced Features
-    df['%-chaikin_vol'] = (df['%-bb_upper-20'] - df['%-bb_lower-20']) / df['%-sma-14']
-    # df['%-price_intensity'] = df['%-rsi-14'] * df['%-volatility-14']
-    df['%-trend_strength'] = df['%-adx-14'] * df['%-cci-14']
-    
-    # Lagged Features backward
-    for lag in [1, 2, 3, 5]:
-        df[f'%-lag_{lag}'] = df['Income'].shift(-lag)
-    
-    # Difference Features
-    for diff in [1, 3, 5]:
-        df[f'%-diff-{diff}'] = df['Income'].diff(diff)
-    
+    for price_col in ['Income', 'Outcome']:
+        suffix = 'income' if price_col == 'Income' else 'outcome'
+        volume_col = 'Outcome' if price_col == 'Income' else 'Income'
+        
+        # Price transformations
+        df[f'%-log_price_{suffix}'] = np.log1p(df[price_col])
+        df[f'%-sqrt_price_{suffix}'] = np.sqrt(df[price_col])
+        
+        # Momentum Indicators (12 features)
+        for period in [7, 14]:
+            df[f'%-rsi-{period}_{suffix}'] = ta.RSI(df[price_col], timeperiod=period)
+            stoch_k, stoch_d = ta.STOCH(df[price_col], df[price_col], df[price_col], fastk_period=period)
+            df[f'%-stoch-k-{period}_{suffix}'] = stoch_k
+            df[f'%-stoch-d-{period}_{suffix}'] = stoch_d
+        
+        df[f'%-mom-10_{suffix}'] = ta.MOM(df[price_col], timeperiod=10)
+        df[f'%-mom-20_{suffix}'] = ta.MOM(df[price_col], timeperiod=20)
+        df[f'%-cmo-14_{suffix}'] = ta.CMO(df[price_col], timeperiod=14)
+        df[f'%-roc-10_{suffix}'] = ta.ROC(df[price_col], timeperiod=10)
+        df[f'%-roc-20_{suffix}'] = ta.ROC(df[price_col], timeperiod=20)
+        df[f'%-trix-14_{suffix}'] = ta.TRIX(df[price_col], timeperiod=14)
+        
+        # MACD components
+        macd, macdsignal, macdhist = ta.MACD(df[price_col])
+        df[f'%-macd_{suffix}'] = macd
+        df[f'%-macd_signal_{suffix}'] = macdsignal
+        df[f'%-macd_hist_{suffix}'] = macdhist
+        
+        # Trend Indicators (12 features)
+        for period in [7, 14, 30]:
+            df[f'%-sma-{period}_{suffix}'] = ta.SMA(df[price_col], timeperiod=period)
+            df[f'%-ema-{period}_{suffix}'] = ta.EMA(df[price_col], timeperiod=period)
+        
+        df[f'%-dema-20_{suffix}'] = ta.DEMA(df[price_col], timeperiod=20)
+        df[f'%-tema-20_{suffix}'] = ta.TEMA(df[price_col], timeperiod=20)
+        df[f'%-kama-20_{suffix}'] = ta.KAMA(df[price_col], timeperiod=20)
+        df[f'%-wma-20_{suffix}'] = ta.WMA(df[price_col], timeperiod=20)
+        df[f'%-adx-14_{suffix}'] = ta.ADX(df[price_col], df[price_col], df[price_col], timeperiod=14)
+        df[f'%-cci-14_{suffix}'] = ta.CCI(df[price_col], df[price_col], df[price_col], timeperiod=14)
+        df[f'%-vwma-20_{suffix}'] = (df[price_col] * df[volume_col]).rolling(20).sum() / df[volume_col].rolling(20).sum()
+        
+        # Volatility Indicators (10 features)
+        periods = [7, 14, 30]
+        for period in periods:
+            df[f'%-atr-{period}_{suffix}'] = ta.ATR(df[price_col], df[price_col], df[price_col], timeperiod=period)
+        
+        upper, middle, lower = ta.BBANDS(df[price_col], timeperiod=20)
+        df[f'%-bb_upper-20_{suffix}'] = upper
+        df[f'%-bb_middle-20_{suffix}'] = (upper + lower) / 2
+        df[f'%-bb_lower-20_{suffix}'] = lower
+        df[f'%-bb_width_{suffix}'] = (upper - lower) / df[f'%-sma-14_{suffix}']
+        df[f'%-bb_pctb_{suffix}'] = (df[price_col] - lower) / (upper - lower)
+        
+        # Cycle Indicators (5 features)
+        df[f'%-ht_trendline_{suffix}'] = ta.HT_TRENDLINE(df[price_col])
+        sine, leadsine = ta.HT_SINE(df[price_col])
+        df[f'%-ht_sine_{suffix}'] = sine
+        df[f'%-ht_leadsine_{suffix}'] = leadsine
+        df[f'%-phase_shift_{suffix}'] = sine - leadsine
+        
+        # Volume Indicators (5 features)
+        df[f'%-obv_{suffix}'] = ta.OBV(df[price_col], df[volume_col])
+        df[f'%-volume_zscore_{suffix}'] = (df[volume_col] - df[volume_col].rolling(20).mean()) / df[volume_col].rolling(20).std()
+        
+        # Statistical Features (12 features)
+        for period in [14, 30]:
+            df[f'%-rolling_skew-{period}_{suffix}'] = df[price_col].rolling(period).skew()
+            df[f'%-rolling_kurt-{period}_{suffix}'] = df[price_col].rolling(period).kurt()
+            df[f'%-rolling_q25-{period}_{suffix}'] = df[price_col].rolling(period).quantile(0.25)
+            df[f'%-rolling_q75-{period}_{suffix}'] = df[price_col].rolling(period).quantile(0.75)
+        
+        df[f'%-expanding_mean_{suffix}'] = df[price_col].expanding().mean()
+        df[f'%-expanding_std_{suffix}'] = df[price_col].expanding().std()
+        
+        # Time-based Features
+        # df[f'%-day_of_week_{suffix}'] = df['Date'].dt.dayofweek
+        # df[f'%-month_{suffix}'] = df['Date'].dt.month
+        # df[f'%-quarter_{suffix}'] = df['Date'].dt.quarter
+        # df[f'%-year_{suffix}'] = df['Date'].dt.year
+        
+        # Advanced Features
+        df[f'%-chaikin_vol_{suffix}'] = (df[f'%-bb_upper-20_{suffix}'] - df[f'%-bb_lower-20_{suffix}']) / df[f'%-sma-14_{suffix}']
+        df[f'%-trend_strength_{suffix}'] = df[f'%-adx-14_{suffix}'] * df[f'%-cci-14_{suffix}']
+        
+        # Lagged Features backward
+        for lag in [1, 2, 3, 5]:
+            df[f'%-lag_{lag}_{suffix}'] = df[price_col].shift(-lag)
+        
+        # Difference Features
+        for diff in [1, 3, 5]:
+            df[f'%-diff-{diff}_{suffix}'] = df[price_col].diff(diff)
+
+    df[f'%-day_of_week'] = df['Date'].dt.dayofweek
+    df[f'%-month'] = df['Date'].dt.month
+    df[f'%-quarter'] = df['Date'].dt.quarter
+    df[f'%-year'] = df['Date'].dt.year
     
     return df
