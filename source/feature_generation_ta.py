@@ -84,22 +84,16 @@ def generate_features(df):
         df[f'%-expanding_mean_{suffix}'] = df[price_col].expanding().mean()
         df[f'%-expanding_std_{suffix}'] = df[price_col].expanding().std()
         
-        # Time-based Features
-        # df[f'%-day_of_week_{suffix}'] = df['Date'].dt.dayofweek
-        # df[f'%-month_{suffix}'] = df['Date'].dt.month
-        # df[f'%-quarter_{suffix}'] = df['Date'].dt.quarter
-        # df[f'%-year_{suffix}'] = df['Date'].dt.year
-        
         # Advanced Features
         df[f'%-chaikin_vol_{suffix}'] = (df[f'%-bb_upper-20_{suffix}'] - df[f'%-bb_lower-20_{suffix}']) / df[f'%-sma-14_{suffix}']
         df[f'%-trend_strength_{suffix}'] = df[f'%-adx-14_{suffix}'] * df[f'%-cci-14_{suffix}']
         
         # Lagged Features backward
-        for lag in [1, 2, 3, 5]:
+        for lag in [1, 2, 3, 5, 7, 14]:
             df[f'%-lag_{lag}_{suffix}'] = df[price_col].shift(-lag)
         
         # Difference Features
-        for diff in [1, 3, 5]:
+        for diff in [1, 2, 3, 4, 5, 7, 14]:
             df[f'%-diff-{diff}_{suffix}'] = df[price_col].diff(diff)
 
     df[f'%-day_of_week'] = df['Date'].dt.dayofweek

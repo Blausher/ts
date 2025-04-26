@@ -117,12 +117,8 @@ def pipe(x_train: pd.DataFrame, x_valid: pd.DataFrame, x_test: pd.DataFrame,
 
     best_algo = df_m[df_m['test_metric'].eq(df_m['test_metric'].min())]['k'].values[0]
 
-    # print('df_m:')
-    # print(df_m)
-
     # OPTIMIZATION part -------------------------------
     if best_algo == 'df_metric_lgbm_corr':
-        # print('best_algo = LGBM Corr')
         # победил отбор с помощью корреляции
         objective_with_args = partial(objective_lgbm_model,
                                     X_train=x_train,
@@ -149,7 +145,6 @@ def pipe(x_train: pd.DataFrame, x_valid: pd.DataFrame, x_test: pd.DataFrame,
                 }
 
     if best_algo == 'df_metric_lgbm':
-        # print('best_algo = LGBM')
         # победил отбор с помощью backward FS
         objective_with_args = partial(objective_lgbm_model,
                                     X_train=x_train,
@@ -176,7 +171,6 @@ def pipe(x_train: pd.DataFrame, x_valid: pd.DataFrame, x_test: pd.DataFrame,
                 }
         
     if best_algo == 'df_metric_lasso': # TODO посмотреть еще этот отбор альфы мб оптимизировать
-        # print('best_algo = Lasso')
         # победил отбор Lasso
         # param_grid = {'alpha': np.logspace(-4, 1, 10)}
         # lasso = Lasso(max_iter=1000)

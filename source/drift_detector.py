@@ -1,3 +1,7 @@
+import pandas as pd
+import numpy as np
+
+
 class DriftDetector:
     def __init__(self, window_size=20, ewma_alpha=0.3, cusum_threshold=5):
         self.window_size = window_size
