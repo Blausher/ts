@@ -46,6 +46,19 @@ def calculate_correlation_importances(x_train, y):
     top10_features = importance_df['Feature'].iloc[:10].to_list()
     return importance_df, top10_features
 
+def get_lasso_non_zero_features(lasso, x_train) -> list:
+    non_zero_coefficients_indices = np.where(lasso.coef_ != 0)[0]  
+    non_zero_features = x_train.columns[non_zero_coefficients_indices]  
+    absolute_coefficients = np.abs(lasso.coef_[non_zero_coefficients_indices])  
+
+    feature_ranking = pd.DataFrame({  
+        'Feature': non_zero_features,  
+        'Absolute Coefficient': absolute_coefficients})  
+    
+    feature_ranking = feature_ranking.sort_values(by='Absolute Coefficient', ascending=False) 
+
+    return feature_ranking['Feature'].to_list()
+
 
 def pipe(x_train: pd.DataFrame, x_valid: pd.DataFrame, x_test: pd.DataFrame,
         y_train: pd.Series, y_valid: pd.Series, y_test: pd.Series,
@@ -170,18 +183,18 @@ def pipe(x_train: pd.DataFrame, x_valid: pd.DataFrame, x_test: pd.DataFrame,
                 'best_model': 'LGBM'
                 }
         
-    if best_algo == 'df_metric_lasso': # TODO посмотреть еще этот отбор альфы мб оптимизировать
+    if best_algo == 'df_metric_lasso': 
         # победил отбор Lasso
-        # param_grid = {'alpha': np.logspace(-4, 1, 10)}
-        # lasso = Lasso(max_iter=1000)
-        # grid_search = GridSearchCV(lasso, param_grid, cv=5, scoring='neg_mean_absolute_error')
-        # grid_search.fit(X_train_scaled, y_train)
-        # best_alpha = grid_search.best_params_['alpha']
+        param_grid = {'alpha': np.logspace(-4, 1, 10)}
+        lasso = Lasso(max_iter=1000)
+        grid_search = GridSearchCV(lasso, param_grid, cv=5, scoring='neg_mean_absolute_error')
+        grid_search.fit(X_train_scaled, y_train)
+        best_alpha = grid_search.best_params_['alpha']
 
-        # lasso = Lasso(alpha=best_alpha)  
-        # lasso.fit(X_train_scaled, y_train)
+        lasso = Lasso(alpha=best_alpha)  
+        lasso.fit(X_train_scaled, y_train)
 
-        return {'model': lasso, 'features': longlist,
+        return {'model': lasso, 'features': get_lasso_non_zero_features(lasso, x_train),
                 'X_train_scaled': X_train_scaled, 
                 'X_valid_scaled': X_valid_scaled,
                 'X_test_scaled': X_test_scaled,

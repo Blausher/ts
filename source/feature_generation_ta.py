@@ -19,7 +19,7 @@ def generate_features(df):
         df[f'%-sqrt_price_{suffix}'] = np.sqrt(df[price_col])
         
         # Momentum Indicators (12 features)
-        for period in [7, 14]:
+        for period in [2,3,4,5, 7, 14]:
             df[f'%-rsi-{period}_{suffix}'] = ta.RSI(df[price_col], timeperiod=period)
             stoch_k, stoch_d = ta.STOCH(df[price_col], df[price_col], df[price_col], fastk_period=period)
             df[f'%-stoch-k-{period}_{suffix}'] = stoch_k
@@ -39,7 +39,7 @@ def generate_features(df):
         df[f'%-macd_hist_{suffix}'] = macdhist
         
         # Trend Indicators (12 features)
-        for period in [7, 14, 30]:
+        for period in [2,3,4,5, 7, 14, 30]:
             df[f'%-sma-{period}_{suffix}'] = ta.SMA(df[price_col], timeperiod=period)
             df[f'%-ema-{period}_{suffix}'] = ta.EMA(df[price_col], timeperiod=period)
         
@@ -52,7 +52,7 @@ def generate_features(df):
         df[f'%-vwma-20_{suffix}'] = (df[price_col] * df[volume_col]).rolling(20).sum() / df[volume_col].rolling(20).sum()
         
         # Volatility Indicators (10 features)
-        periods = [7, 14, 30]
+        periods = [1,2,3,4,5, 7, 14, 30]
         for period in periods:
             df[f'%-atr-{period}_{suffix}'] = ta.ATR(df[price_col], df[price_col], df[price_col], timeperiod=period)
         
@@ -75,7 +75,7 @@ def generate_features(df):
         df[f'%-volume_zscore_{suffix}'] = (df[volume_col] - df[volume_col].rolling(20).mean()) / df[volume_col].rolling(20).std()
         
         # Statistical Features (12 features)
-        for period in [14, 30]:
+        for period in [4, 5, 7, 14, 30]:
             df[f'%-rolling_skew-{period}_{suffix}'] = df[price_col].rolling(period).skew()
             df[f'%-rolling_kurt-{period}_{suffix}'] = df[price_col].rolling(period).kurt()
             df[f'%-rolling_q25-{period}_{suffix}'] = df[price_col].rolling(period).quantile(0.25)
